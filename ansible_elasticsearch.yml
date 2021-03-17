@@ -1,0 +1,63 @@
+---
+- hosts: Ansible_Hosts
+  tasks:
+  - name: check if java is installed
+    stat:
+      path: /usr/lib/jvm
+    register: java_path
+  - name:
+    debug:
+      msg: "{{java_path}}"
+
+  - name:  install java 8
+    yum:
+      name: java-1.8.0-openjdk-devel
+      state: present
+    when: java_path.stat.exists == False
+    become: true
+    become_user: root
+  
+  - name: Download and install ElasticSearch-7.9.3
+    yum:
+      name: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.9.3-x86_64.rpm
+      state: present
+    become: true
+    become_user: root
+
+  - name: Insert multiple lines using blockinfile to elasticsearch
+    blockinfile:
+      dest: /etc/elasticsearch/elasticsearch.yml
+      block: |
+        network.host: 0.0.0.0
+        http.port: 9200
+        discovery.type: single-node
+        xpack.security.enabled: true
+        xpack.security.transport.ssl.enabled: true
+      backup: yes
+    become: true
+    become_user: root
+
+  - name: Modify the JVM XMS parameter
+    lineinfile:
+      dest: /etc/elasticsearch/jvm.options
+      line: '-Xms500m'
+      insertafter: '-Xms1g'
+    become: true
+    become_user: root
+
+  - name: Modify the JVM XMX parameter
+    lineinfile:
+      dest: /etc/elasticsearch/jvm.options
+      line: '-Xmx700m'
+      insertafter: '-Xmx1g'
+    become: true
+    become_user: root
+
+  - name: Start and enable ElasticSearch
+    service:
+     daemon_reload: yes
+     name: elasticsearch
+     state: started
+     enabled: yes
+    become: true
+    become_user: root
