@@ -55,7 +55,7 @@
     become: true
 
   - name: Add the Bootstrap Customised Password to bin/elasticsearch-keystore
-    command: printf "%s" "test123" | /usr/share/elasticsearch/bin/elasticsearch-keystore add -x "bootstrap.password"
+    shell: printf "%s" "test123" | /usr/share/elasticsearch/bin/elasticsearch-keystore add -x "bootstrap.password"
     become: true
 
   - name: Insert multiple lines using blockinfile to elasticsearch
@@ -75,3 +75,11 @@
      name: elasticsearch
      state: restarted
     become: true
+
+  - name: To verify the elasticsearch is up and running and accesible using the password which we have created
+    shell: curl -u elastic:test123 http://localhost:9200
+    register: elastic_status
+
+  - name: To see the status
+    debug:
+      msg: "{{ elastic_status }}"
