@@ -34,18 +34,31 @@ resource "aws_security_group" "ec2" {
   }
 }
 
+data "aws_ami" "amazon-linux-2" {
+  most_recent      = true
+  owners           = ["amazon"]
 
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+   name   = "name"
+   values = ["amzn2-ami-hvm*"]
+ }
+}
 
 resource "aws_instance" "ansible_elasticsearch_test" {
   count = 1
-  ami           = "ami-038f1ca1bd58a5790"
+  ami           = "${data.aws_ami.amazon-linux-2.id}"
   instance_type = "t2.micro"
   key_name      = "elk_test"
   vpc_security_group_ids = [aws_security_group.ec2.id]
   tags = {
     Name = "ansible_inventory_test_${count.index + 1}"
   }
-} 
+}
 
 resource "null_resource" "ConfigureAnsibleLabelVariable" {
   provisioner "local-exec" {
@@ -75,10 +88,17 @@ resource "null_resource" "ProvisionRemoteHostsIpToAnsibleHosts" {
   }
   provisioner "remote-exec" {
    inline = [
-      "sudo yum install git -y"
+      "sudo yum install java-1.8.0-openjdk -y"
     ]
   }
   provisioner "local-exec" {
     command = "echo ${element(aws_instance.ansible_elasticsearch_test.*.private_ip, count.index)} >> /etc/ansible/hosts"
   }
+}
+
+resource "null_resource" "ModifyApplyAnsiblePlayBook" {
+  provisioner "local-exec" {
+    command = "sleep 10; ansible-playbook ansible_elasticsearch.yml"
+  }
+  depends_on = ["null_resource.ProvisionRemoteHostsIpToAnsibleHosts"]
 }
