@@ -32,19 +32,19 @@
       backup: yes
     become: true
 
-  - name: Modify the JVM XMS parameter
+  - name: Modify the JVM XMS and XMX parameter
     lineinfile:
-      dest: /etc/elasticsearch/jvm.options
-      line: '-Xms500m'
-      insertafter: '-Xms1g'
+      path: /etc/elasticsearch/jvm.options
+      # Line to Search/Match against
+      regexp: '{{item.From}}'
+      # Line to Replace with
+      line: '{{item.To}}'
+      state: present
+    with_items:
+     - { From: '-Xms1g', To: '-Xms500m'}
+     - { From: '-Xmx1g', To: '-Xmx700m'}
     become: true
 
-  - name: Modify the JVM XMX parameter
-    lineinfile:
-      dest: /etc/elasticsearch/jvm.options
-      line: '-Xmx700m'
-      insertafter: '-Xmx1g'
-    become: true
 
   - name: Start and enable ElasticSearch
     service:
