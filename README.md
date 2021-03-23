@@ -11,5 +11,4 @@ Steps:
  - terraform plan
  - terraform apply
 
-5. This will add the required information to the hosts files as well required for ansible-playbook execution.
-6. Execute the ansible-playbook 
+This will create the ec2 instance of t2.micro type and install the elasticsearch and start it as well with the cutom password which we have provided.
