@@ -52,8 +52,8 @@ data "aws_ami" "amazon-linux-2" {
 resource "aws_instance" "ansible_elasticsearch_test" {
   count = 1
   ami           = "${data.aws_ami.amazon-linux-2.id}"
-  instance_type = "t2.micro"
-  key_name      = "elk_test"
+  instance_type = var.instance_type
+  key_name      = var.key_name
   vpc_security_group_ids = [aws_security_group.ec2.id]
   tags = {
     Name = "ansible_inventory_test_${count.index + 1}"
